@@ -8,13 +8,18 @@ import { LoginUser } from '../../types/DBtypes';
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
     const {email, password} = req.body;
-    console.log('USERNAME AND PASSWORD IN AUTHCONTROLLER', email, password);
+    //console.log('USERNAME AND PASSWORD IN AUTHCONTROLLER', email, password);
 
     const user = await userModel.findOne({email: email});
 
     if(!user) {
         next(new CustomError('Invalid credentials', 403));
         return;
+    }
+
+    if (!bcrypt.compareSync(password, user.password)) {
+      next(new CustomError('Invalid credentials', 403));
+      return;
     }
 
     const tokenContent: LoginUser = {

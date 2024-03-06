@@ -53,7 +53,7 @@ const userPost = async (
     };
     res.json(response);
   } catch (err) {
-    next(err);
+    next(new CustomError((err as Error).message, 500));
   }
 };
 
