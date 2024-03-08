@@ -6,17 +6,23 @@ type User = Partial<Document> & {
     email: string;
     password: string;
     role: 'user' | 'admin';
+    isFollowing: Category[] | Types.ObjectId[];
 }
 
-type LoginUser = Omit<User, 'password'>;
+type Category = Partial<Document> & {
+  id: Types.ObjectId | string;
+  name: string;
+};
+
+type LoginUser = Omit<User, 'password' | 'isFollowing'>;
 
 type TokenContent = {
   token: string;
   user: LoginUser;
 };
 
-type UserOutput = Omit<User, 'password' | 'role'>;
+type UserOutput = Omit<User, 'password' | 'role' | 'isFollowing'>;
 
 type UserInput = Omit<User, 'id' | 'role'>;
 
-export {User, LoginUser, TokenContent, UserOutput, UserInput};
+export {User, LoginUser, TokenContent, UserOutput, UserInput, Category};

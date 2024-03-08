@@ -6,6 +6,9 @@ import {
   userListGet,
   userPost,
   userPut,
+  userAddCategory,
+  userCategoriesGet,
+  userRemoveCategory
 } from '../controllers/userController';
 import {authenticate} from '../../middlewares';
 
@@ -19,6 +22,12 @@ router
   .delete(authenticate, userDelete);
 
 router.get('/token', authenticate, checkToken);
+
+router
+  .route('/:id/categories')
+  .get(userCategoriesGet)
+  .post(authenticate, userAddCategory)
+  .delete(authenticate, userRemoveCategory);
 
 router
   .route('/:id')

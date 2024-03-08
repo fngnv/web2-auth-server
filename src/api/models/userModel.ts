@@ -20,6 +20,12 @@ const userModel = new mongoose.Schema<User>({
         type: String,
         required: true,
     },
+    isFollowing: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Category',
+        },
+    ],
 });
 
 // Add virtual id field, more explanation later

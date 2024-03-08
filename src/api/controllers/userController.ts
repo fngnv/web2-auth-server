@@ -2,8 +2,10 @@ import {Request, Response, NextFunction} from 'express';
 import CustomError from '../../classes/CustomError';
 import bcrypt from 'bcryptjs';
 import userModel from '../models/userModel';
-import {LoginUser, User, UserInput, UserOutput} from '../../types/DBtypes';
+import CategoryModel from '../models/categoryModel';
+import {LoginUser, User, UserInput, UserOutput, Category} from '../../types/DBtypes';
 import {UserResponse} from '../../types/MessageTypes';
+import { Types } from 'mongoose';
 
 const salt = bcrypt.genSaltSync(10);
 
@@ -14,6 +16,26 @@ const userListGet = async (req: Request, res: Response, next: NextFunction) => {
     } catch (err) {
         next(err);
     }
+};
+
+const userCategoriesGet = async (
+  req: Request<{id: string}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+      const user = await userModel
+          .findById(req.params.id)
+          .populate('isFollowing')
+          .select('isFollowing');
+      if (!user) {
+          next(new CustomError('User not found', 404));
+          return;
+      }
+      res.json(user.isFollowing);
+  } catch (err) {
+      next(err);
+  }
 };
 
 const userGet = async (
@@ -42,7 +64,11 @@ const userPost = async (
   try {
     const user = req.body;
     user.password = await bcrypt.hash(user.password, salt);
+    const categoryArray: Types.ObjectId[] = [];
+    user.isFollowing = categoryArray;
+    user.isFollowing.push(new Types.ObjectId('65e8a95f7d33114f9ae2b901'));
     const newUser = await userModel.create(user);
+    console.log('NEW USER', newUser);
     const response: UserResponse = {
       message: 'User created',
       user: {
@@ -91,6 +117,73 @@ const userPut = async (
     next(err);
   }
 };
+
+const userRemoveCategory = async (
+  req: Request<{id?: string}, {}, {categoryId: string}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {id} = req.params;
+    const {categoryId} = req.body;
+    const user = await userModel.findByIdAndUpdate(
+      id,
+      { $pull: { isFollowing: categoryId } },
+      { new: true }
+    );
+    if (!user) {
+      next(new CustomError('User not found', 404));
+      return;
+    }
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+  /* const {id} = req.params;
+  const {categoryId} = req.body;
+  const user = await userModel.findById(id);
+  const category = await CategoryModel.findById(categoryId);
+  if(!user || !category) {
+    next(new CustomError('User or category not found', 404));
+    return;
+  }
+   */
+};
+
+const userAddCategory = async (
+  req: Request<{id?: string}, {}, {categoryId: string}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {id} = req.params;
+    const {categoryId} = req.body
+    const user = await userModel.findById(id);
+    const category = await CategoryModel.findById(categoryId);
+    if(!user || !category) {
+      next(new CustomError('User or category not found', 404));
+      return;
+    }
+    user.isFollowing.push(category._id);
+    const result = await userModel
+      .findByIdAndUpdate(id, user, {new: true})
+      .select('-password -role');
+
+    if (!result) {
+      next(new CustomError('User not found', 404));
+      return;
+    }
+    const response: Partial<User> = {
+      username: result.username,
+      email: result.email,
+      id: result._id,
+      isFollowing: result.isFollowing,
+    };
+    res.json(response);
+  } catch (err) {
+    next(err);
+  }
+}
 
 const userDelete = async (
     req: Request<{id?: string}>,
@@ -158,4 +251,14 @@ const checkToken = async(
   }
 };
 
-export {userListGet, userGet, userPost, userPut, userDelete, checkToken};
+export {
+  userListGet,
+  userGet,
+  userPost,
+  userPut,
+  userDelete,
+  checkToken,
+  userCategoriesGet,
+  userAddCategory,
+  userRemoveCategory
+};
