@@ -6,6 +6,7 @@ import CategoryModel from '../models/categoryModel';
 import {LoginUser, User, UserInput, UserOutput, Category} from '../../types/DBtypes';
 import {UserResponse} from '../../types/MessageTypes';
 import { Types } from 'mongoose';
+import mongoose from 'mongoose';
 
 const salt = bcrypt.genSaltSync(10);
 
@@ -17,6 +18,23 @@ const userListGet = async (req: Request, res: Response, next: NextFunction) => {
         next(err);
     }
 };
+
+const usersByCategoryGet = async (
+  req: Request<{categoryId: string}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {categoryId} = req.params;
+    const category = await CategoryModel.findById(categoryId);
+    console.log('CATEGORY', category);
+    const users = await userModel.find({ isFollowing: { $in: [category] } });
+    console.log('USERS BY CATEGORY', users);
+    res.json(users);
+  } catch (err) {
+    next(err);
+  }
+}
 
 const userCategoriesGet = async (
   req: Request<{id: string}>,
@@ -139,15 +157,6 @@ const userRemoveCategory = async (
   } catch (err) {
     next(err);
   }
-  /* const {id} = req.params;
-  const {categoryId} = req.body;
-  const user = await userModel.findById(id);
-  const category = await CategoryModel.findById(categoryId);
-  if(!user || !category) {
-    next(new CustomError('User or category not found', 404));
-    return;
-  }
-   */
 };
 
 const userAddCategory = async (
@@ -260,5 +269,6 @@ export {
   checkToken,
   userCategoriesGet,
   userAddCategory,
-  userRemoveCategory
+  userRemoveCategory,
+  usersByCategoryGet,
 };

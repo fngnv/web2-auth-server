@@ -8,7 +8,8 @@ import {
   userPut,
   userAddCategory,
   userCategoriesGet,
-  userRemoveCategory
+  userRemoveCategory,
+  usersByCategoryGet
 } from '../controllers/userController';
 import {authenticate} from '../../middlewares';
 
@@ -28,6 +29,8 @@ router
   .get(userCategoriesGet)
   .post(authenticate, userAddCategory)
   .delete(authenticate, userRemoveCategory);
+
+  router.get('/categories/:categoryId', usersByCategoryGet);
 
 router
   .route('/:id')
