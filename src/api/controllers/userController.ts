@@ -27,9 +27,9 @@ const usersByCategoryGet = async (
   try {
     const {categoryId} = req.params;
     const category = await CategoryModel.findById(categoryId);
-    console.log('CATEGORY', category);
+    //console.log('CATEGORY', category);
     const users = await userModel.find({ isFollowing: { $in: [category] } });
-    console.log('USERS BY CATEGORY', users);
+    //console.log('USERS BY CATEGORY', users);
     res.json(users);
   } catch (err) {
     next(err);
