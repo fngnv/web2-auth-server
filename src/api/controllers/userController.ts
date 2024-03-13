@@ -12,7 +12,10 @@ const salt = bcrypt.genSaltSync(10);
 
 const userListGet = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const users = await userModel.find().select('-password -role');
+        const users = await userModel
+          .find()
+          .select('-password -role')
+          .populate('isFollowing');
         res.json(users);
     } catch (err) {
         next(err);
@@ -84,7 +87,7 @@ const userPost = async (
     user.password = await bcrypt.hash(user.password, salt);
     const categoryArray: Types.ObjectId[] = [];
     user.isFollowing = categoryArray;
-    user.isFollowing.push(new Types.ObjectId('65e8a95f7d33114f9ae2b901'));
+    //user.isFollowing.push(new Types.ObjectId('65e8a95f7d33114f9ae2b901'));
     const newUser = await userModel.create(user);
     console.log('NEW USER', newUser);
     const response: UserResponse = {
@@ -243,7 +246,7 @@ const checkToken = async(
   try {
     const userData: UserOutput = await userModel
       .findById(res.locals.userFromToken.id)
-      .select('-password -role');
+      .select('-password -role')
 
     if (!userData) {
       next(new CustomError('Session not found', 404));
